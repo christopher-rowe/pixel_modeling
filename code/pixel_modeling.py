@@ -1,4 +1,5 @@
 # %%
+# import libraries
 import os
 
 import numpy as np
@@ -22,16 +23,19 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVR
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import Sequential
 
 from xgboost import XGBRegressor
 
 
-
 # %%
+# define functions
 def processImage(file, grayscale = True, basewidth = 280):
     
-    img = Image.open(file).convert('L')
+    if grayscale == True:
+        img = Image.open(file).convert('L')
+    if grayscale == False:
+        img = Image.open(file)
         
     # resize image
     wpercent = (basewidth / float(img.size[0]))
@@ -40,7 +44,66 @@ def processImage(file, grayscale = True, basewidth = 280):
     
     return img
 
-def LRWarp(img, prop_row, prop_col, iterations, verbose = False):
+def getIndexFeatures(img, poly_degree, include_y = True):
+    
+    img_t = asarray(img)
+    X = np.empty((img_t.shape[0]*img_t.shape[1], 2))
+
+    if include_y == True:
+        y = np.empty(img_t.shape[0]*img_t.shape[1])
+
+    i = 0
+    for r in range(img_t.shape[0]):
+        for c in range(img_t.shape[1]):
+            X[i, 0] = r
+            X[i, 1] = c
+            if include_y == True:
+                y[i] = img_t[r, c]
+            i = i + 1
+    poly = PolynomialFeatures(poly_degree)
+    X = poly.fit_transform(X)
+    X = np.delete(X, 0, axis = 1)
+    X = stats.zscore(X, axis = 0)
+
+    if include_y == True:
+        return X, y
+    if include_y == False:
+        return X
+
+def convertIndexToImage(og_img_shape, pred_y):
+    
+    pred_img = np.empty(og_img_shape)
+    
+    i = 0
+    for r in range(og_img_shape[0]):
+        for c in range(og_img_shape[1]):
+            pred_img[r, c] = pred_y[i]
+            i = i + 1
+            
+    return pred_img
+
+def modelIndexWarp(X, y, prop_row, mod, nbs, og_image_shape):
+    if mod == "rf":
+        model = RandomForestRegressor()
+    if mod == "xgb":
+        model = XGBRegressor(objective='reg:squarederror')
+    if mod == "knn":
+        model = KNeighborsRegressor(n_neighbors = nbs)
+    if mod == "et":
+        model = ExtraTreesRegressor()
+        
+    row_sample = np.random.choice(range(X.shape[0]), size=round(prop_row*X.shape[0]), replace = False)
+    X_sample = X[row_sample, :]
+    y_sample = y[row_sample]
+    reg = model.fit(X_sample, y_sample)
+    pred_y = reg.predict(X)
+    pred_y = np.round(pred_y)
+    pred_y = np.clip(pred_y, 0, 255)
+    pred_img = convertIndexToImage(og_image_shape, pred_y)
+    result = Image.fromarray(np.uint8(pred_img))
+    return result
+
+def lrWarp(img, prop_row, prop_col, iterations, verbose = False):
     
     # convert image to array
     img_array = asarray(img)
@@ -98,58 +161,6 @@ def LRWarp2(img1, img2, prop_row, prop_col, iterations, verbose = False):
     
     return result
 
-def getIndexData(img, poly_degree):
-    
-    img_t = asarray(img)
-    X = np.empty((img_t.shape[0]*img_t.shape[1], 2))
-    y = np.empty(img_t.shape[0]*img_t.shape[1])
-    i = 0
-    for r in range(img_t.shape[0]):
-        for c in range(img_t.shape[1]):
-            X[i, 0] = r
-            X[i, 1] = c
-            y[i] = img_t[r, c]
-            i = i + 1
-    poly = PolynomialFeatures(poly_degree)
-    X = poly.fit_transform(X)
-    X = np.delete(X, 0, axis = 1)
-    X = stats.zscore(X, axis = 0)
-
-    return X, y
-
-def convertIndexToImage(og_img_shape, pred_y):
-    
-    pred_img = np.empty(og_img_shape)
-    
-    i = 0
-    for r in range(og_img_shape[0]):
-        for c in range(og_img_shape[1]):
-            pred_img[r, c] = pred_y[i]
-            i = i + 1
-            
-    return pred_img
-
-def modelIndexWarp(X, y, prop_row, mod, nbs, og_image_shape):
-    if mod == "rf":
-        model = RandomForestRegressor()
-    if mod == "xgb":
-        model = XGBRegressor(objective='reg:squarederror')
-    if mod == "knn":
-        model = KNeighborsRegressor(n_neighbors = nbs)
-    if mod == "et":
-        model = ExtraTreesRegressor()
-        
-    row_sample = np.random.choice(range(X.shape[0]), size=round(prop_row*X.shape[0]), replace = False)
-    X_sample = X[row_sample, :]
-    y_sample = y[row_sample]
-    reg = model.fit(X_sample, y_sample)
-    pred_y = reg.predict(X)
-    pred_y = np.round(pred_y)
-    pred_y = np.clip(pred_y, 0, 255)
-    pred_img = convertIndexToImage(og_image_shape, pred_y)
-    result = Image.fromarray(np.uint8(pred_img))
-    return result
-
 def permutationWarp(img, iterations, max_block_prop):
 
     img_array = asarray(img)
@@ -184,24 +195,3 @@ def permutationWarp(img, iterations, max_block_prop):
     
     return result
 
-# %%
-# import photo
-os.chdir('/Users/chrisrowe/Documents/personal_projects/pixel_modeling/data/')
-
-# open and process images
-img_cr = processImage('cr.jpg')
-
-# %%
-X, y = getIndexData(img_cr, poly_degree = 30)
-knn = modelIndexWarp(X, y, prop_row = 0.003,
-              mod = 'knn', nbs = 1, og_image_shape = asarray(img_cr).shape)
-knn
-
-# %%
-LRWarp(img_cr, prop_row = 1, prop_col = 1, 
-       iterations = 1, verbose = False)
-
-# %%
-permutationWarp(img_cr, 10, 0.2)
-
-# %%
