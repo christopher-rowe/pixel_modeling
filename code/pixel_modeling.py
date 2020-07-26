@@ -132,7 +132,7 @@ def convertIndexToImage(og_img_shape, pred_y):
             
     return pred_img
 
-def modelIndexWarp(X, y, prop_row, mod, nbs, og_image_shape):
+def modelIndexWarp(X, y, prop_row, mod, og_image_shape, nbs = 1):
     """Models pixel values as a funciton of their position in
        the image using specified proportion of pixels as training
        data, algorith, and hyperparameters (for KNN)
