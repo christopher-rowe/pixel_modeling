@@ -10,7 +10,7 @@ I should note that this repository is intended more as a source of inspiration f
 - /data: contains a few example images that I have been working with, though you can use any image file you please.
 - /code: contains some standalone functions in pixel_modeling.py, which I use in the demonstration.ipynb notebook in the /notebooks directory
 - /notebooks: contains a simple demonstration of some functionalities in demonstration.ipynb as well as some further experimentation in experimentation.ipynb
-- /results: contains the results demonstrated in the demonstration.ipynb and experimentation.ipynb notebooks.
+- /results: contains the results produced in the demonstration.ipynb and experimentation.ipynb notebooks.
 
 
 
