@@ -4,7 +4,7 @@ Fitting statistical and machine learning models to image pixels to obtain intere
 ## Overview
 Because digitized images are just arrays of numbers, there are a wide variety of ways to manipulate those numbers and thus manipulate images. Image effects, as in something like Photoshop or Instagram, really just involve targeted mathematical operations on the numeric arrays underlying any given image. I thought it would be fun to experiment with different approaches to manipulate image pixel values, with a focus on incorporating randomness and utilizing regression algorithms, which can create some suprising and fascinating results. 
 
-I should note that this repository is intended more as a source of inspiration for further experimentation as opposed to providing nicely packaged functionality, though I have included a a small number of standalone functions. This is just a personal project that I try to tinker with when I find the time, and I hope that it can inspire others to employ programming and/or statistics to create wierd and novel art.
+I should note that this repository is intended more as a source of inspiration for further experimentation as opposed to providing nicely packaged functionality, though I have included a a small number of standalone functions. This is just a personal project that I try to tinker with when I find the time, and I hope that it can inspire others to utilize programming, statistics, and machine learning to create wierd and novel art.
 
 ## Organization
 - /data: contains a few example images that I have been working with, though you can use any image file you please.
