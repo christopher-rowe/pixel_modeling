@@ -162,7 +162,9 @@ def modelIndexWarp(X, y, prop_row, mod, og_image_shape, nbs = 1):
         model = ExtraTreesRegressor()
         
     # sample pixels to use for training
-    row_sample = np.random.choice(range(X.shape[0]), size=round(prop_row*X.shape[0]), replace = False)
+    row_sample = np.random.choice(range(X.shape[0]), 
+                                  size=round(prop_row*X.shape[0]), 
+                                  replace = False)
     X_sample = X[row_sample, :]
     y_sample = y[row_sample]
 
@@ -189,9 +191,12 @@ def lrWarp(img, prop_row, prop_col, iterations, verbose = False):
 
     Args:
         img (PIL Image): Original image
-        prop_row (float): proportion of rows (i.e. observations) to use during training
-        prop_col (float): proportion of columns (i.e. features) to use during training
-        iterations (int): Number of iterations; more iterations creates smoother result
+        prop_row (float): proportion of rows (i.e. observations) to use during 
+                          training
+        prop_col (float): proportion of columns (i.e. features) to use during 
+                          training
+        iterations (int): Number of iterations; more iterations creates 
+                          smoother result
         verbose (bool, optional): Print iteration. Defaults to False.
 
     Returns:
@@ -217,8 +222,12 @@ def lrWarp(img, prop_row, prop_col, iterations, verbose = False):
             y = img_array[:, col]
 
             # subset row and column sample as specified
-            row_sample = np.random.choice(range(X.shape[0]), size=round(prop_row*X.shape[0]), replace = False)
-            col_sample = np.random.choice(range(X.shape[1]), size=round(prop_col*X.shape[1]), replace = False)
+            row_sample = np.random.choice(range(X.shape[0]), 
+                                          size=round(prop_row*X.shape[0]), 
+                                          replace = False)
+            col_sample = np.random.choice(range(X.shape[1]), 
+                                          size=round(prop_col*X.shape[1]), 
+                                          replace = False)
             X_rc_samp = X[row_sample, :]
             X_rc_samp = X_rc_samp[:, col_sample]
             y_r_samp = y[row_sample]
@@ -266,21 +275,24 @@ def permutationWarp(img, iterations, max_block_prop):
         #initialize empty array for single resulting image
         pred_img_single = np.empty(img_array.shape)
 
-        # determine whether columns or rows will be permuted, and transpose image as appropriate
+        # determine whether columns or rows will be permuted, and transpose 
+        #   image as appropriate
         d = np.random.binomial(1, 0.5)
         if d == 1:
             img_array = img_array.T
             pred_img_single = pred_img_single.T
 
         # randomly obtain block size to b permuted
-        block_size = np.random.choice(range(1, round(max_block_prop*img_array.shape[0])))
+        max_block = round(max_block_prop*img_array.shape[0])
+        block_size = np.random.choice(range(1, max_block))
 
         # permute through max. number of blocks with size block_size
         s = 0
         while s + block_size < img_array.shape[0]:
 
             # obtain permuted order for appropriate block
-            p_order = np.random.choice(range(s, s+block_size), size = block_size, replace = False)
+            p_order = np.random.choice(range(s, s+block_size), 
+                                       size = block_size, replace = False)
 
             # store permuted row or column vectors
             pred_img_single[s:s+block_size, :] = img_array[p_order, :]
@@ -288,7 +300,9 @@ def permutationWarp(img, iterations, max_block_prop):
             s = s + block_size
 
         # final block, which may be of size < block_size
-        p_order = np.random.choice(range(s, img_array.shape[0]), size = (img_array.shape[0] - s), replace = False)
+        p_order = np.random.choice(range(s, img_array.shape[0]), 
+                                   size = (img_array.shape[0] - s), 
+                                   replace = False)
         pred_img_single[s:img_array.shape[0], :] = img_array[p_order, :]
 
         # convert image back to appropriate orientation
@@ -304,4 +318,3 @@ def permutationWarp(img, iterations, max_block_prop):
     result = Image.fromarray(np.uint8(pred_img))
     
     return result
-
